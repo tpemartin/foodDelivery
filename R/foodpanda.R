@@ -13,7 +13,7 @@ FoodPanda <- function(
     shopMenuFolderUrl = shopMenuFolderUrl
   ))
 }
-
+# helpers ------
 DataFoodPanda <-
   R6::R6Class(
     "Data Foodpanda",
