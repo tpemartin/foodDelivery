@@ -34,7 +34,7 @@ DataFoodPanda <-
       retrieve_data = function(dates, need2download = T) {
         retrieveData(dates, shopListDribbles = private$shopListDribbles, shopMenuDribbles = private$shopMenuDribbles, need2download = need2download)
       },
-      detect_feature_changes = function(df, df2, removeFeatures){
+      detect_feature_changes = function(df, df2, removeFeatures=""){
         compare_feature_changes(df, df2, removeFeatures)
       }
     ),
