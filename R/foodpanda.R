@@ -149,7 +149,7 @@ get_all_most_shopListDribble <- function(shopListDribbles) {
 }
 
 retrieveData <- function(selectedFileDates, shopListDribbles, shopMenuDribbles, need2download = T) {
-  pj <- rstudioapi::getActiveProject()
+  pj <- rprojroot::find_rstudio_root_file() # rstudioapi::getActiveProject()
   if(!dir.exists(file.path(pj, "local-data"))) dir.create(file.path(pj, "local-data"))
   pickedDribbles <- # pick dribbles based on selected dates
     {
