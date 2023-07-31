@@ -31,8 +31,16 @@ DataFoodPanda <-
         private$get_shopMenuDribbles()
         private$get_availableDates()
       },
-      retrieve_data = function(dates, need2download = T) {
-        retrieveData(dates, shopListDribbles = private$shopListDribbles, shopMenuDribbles = private$shopMenuDribbles, need2download = need2download)
+      retrieve_data = function(dates, need2download = F, refreshDribble=F) {
+        private$allMostShopListDribbles <- obtain_allMostShopListDribbles(shopListDribbles = private$shopListDribbles,
+                                       selectedFileDates = dates,
+                                       cached_allMostShopListDribbles =
+                                         private$allMostShopListDribbles,
+                                       refreshDribble = refreshDribble)
+        retrieveData(dates, shopListDribbles = private$shopListDribbles, shopMenuDribbles = private$shopMenuDribbles,
+                     need2download = need2download,
+                     allMostShopListDribbles = private$allMostShopListDribbles
+                     )
       },
       detect_feature_changes = function(df, df2, removeFeatures=""){
         compare_feature_changes(df, df2, removeFeatures)
@@ -41,6 +49,7 @@ DataFoodPanda <-
     private = list(
       shopListDribbles = list(),
       shopMenuDribbles = list(),
+      allMostShopListDribbles = list(),
       get_shopListDribbles = function() {
         private$shopListDribbles <- get_shopListDribbles(
           shopListFolderUrl =
@@ -70,42 +79,7 @@ extract_fct_county <- function( addresses_corrected) {
   fct_county = factor(county)
   fct_county
 }
-augment_county_township <- function(panel_menu) {
-  panel_menu$address |>
-    stringr::str_extract("[\u4E00-\u9FFF]+") -> addresses
-  addresses |>
-    stringr::str_replace_all(c('台'="臺", "巿"="市", "湾"="灣")) |>
-    stringr::str_remove_all("^臺灣省?") -> addresses_corrected
 
-  fct_county <- extract_fct_county(addresses_corrected)
-
-  whereCountyMissing <- which(is.na(fct_county))
-
-  addresses_corrected[whereCountyMissing] |>
-    stringr::str_extract("^[^縣市]{2}(?=[縣市])") |>
-    paste0("縣") -> toBeAdded
-  toBeAdded[which(toBeAdded=="NA縣")] <- ""
-  toBeAdded
-
-  addresses_corrected[whereCountyMissing] <- {
-    paste0(toBeAdded, addresses_corrected[whereCountyMissing])
-  }
-
-  addresses_corrected_without_county <-
-    stringr::str_remove_all(
-      addresses_corrected,
-      officialCountiesRegex)
-
-  fct_county <- extract_fct_county(addresses_corrected)
-
-  panel_menu$county <- fct_county
-
-  addresses_corrected_without_county |>
-    stringr::str_extract("^[^鄉鎮市區]{1,2}[鄉鎮市區]") -> township
-
-  panel_menu$township <- township
-  panel_menu
-}
 augment_lat_lon <- function(panel_menu) {
   panel_menu$location  |>
     stringr::str_extract_all("[0-9]+\\.[0-9]+", T)  -> latLong
@@ -148,33 +122,25 @@ get_all_most_shopListDribble <- function(shopListDribbles) {
     )
 }
 
-retrieveData <- function(selectedFileDates, shopListDribbles, shopMenuDribbles, need2download = T) {
+retrieveData <- function(selectedFileDates, shopListDribbles, shopMenuDribbles, need2download = T, allMostShopListDribbles) {
   pj <- rprojroot::find_rstudio_root_file() # rstudioapi::getActiveProject()
   if(!dir.exists(file.path(pj, "local-data"))) dir.create(file.path(pj, "local-data"))
-  pickedDribbles <- # pick dribbles based on selected dates
-    {
-      pickDribbles <-
-        (shopListDribbles$name %in% selectedFileDates)
 
-      dribblePicked <- shopListDribbles[pickDribbles, ]
-
-      dribblePicked |>
-        dplyr::arrange(name)
-    }
-
-  allMostShopListDribbles <- # obtain dribble of all_most_....csv
-    {
-      seq_along(pickedDribbles$name) |>
-        purrr::map_dfr(
+  whichFileDoesNotExistYet <-
+    which(!(file.exists(file.path(pj, "local-data", allMostShopListDribbles$name))))
+  if(need2download){
+    listShopListDownloaded <- {
+      seq_along(allMostShopListDribbles$name) |>
+        purrr::map(
           ~ {
-            pickedDribbles[.x, ] |>
-              googledrive::drive_ls(pattern = "^all_most", type = "text/csv")
+            .file <- file.path(pj, "local-data", allMostShopListDribbles$name[[.x]])
+            googledrive::drive_download(allMostShopListDribbles[.x, ], path = .file, overwrite = T)
           }
         )
     }
-
-  listShopListDownloaded <- {
-    seq_along(allMostShopListDribbles$name) |>
+  }
+  if(!need2download && length(whichFileDoesNotExistYet) != 0){
+    whichFileDoesNotExistYet |>
       purrr::map(
         ~ {
           .file <- file.path(pj, "local-data", allMostShopListDribbles$name[[.x]])
@@ -333,6 +299,8 @@ construct_panel_from_dribbles <- function(selectedShopMenuDribbles, pj, download
   panel_menu
 }
 constuct_listDownload_from_listDribble <- function(selectedShopMenuDribbles, pj, download=T) {
+  whichFileDoesNotExistYet <-
+    which(!(file.exists(file.path(pj, "local-data", selectedShopMenuDribbles$name))))
   if (download) {
     listMenuDownload <- # download menu csv
       {
@@ -345,6 +313,15 @@ constuct_listDownload_from_listDribble <- function(selectedShopMenuDribbles, pj,
           )
       }
   } else {
+    if(length(whichFileDoesNotExistYet)!=0){
+      whichFileDoesNotExistYet |>
+        purrr::walk(
+          ~ {
+            .file <- file.path(pj, "local-data", selectedShopMenuDribbles$name[[.x]])
+            googledrive::drive_download(selectedShopMenuDribbles[.x, ], path = .file, overwrite = T)
+          }
+        )
+    }
     listMenuDownload <-
       seq_along(selectedShopMenuDribbles$name) |>
       purrr::map(
@@ -406,4 +383,45 @@ add_dateColumn_byFilename <- function(panel_shopList, allMostShopListDribbles) {
     as.character(panel_shopList$date)
   )
   panel_shopList
+}
+obtain_allMostShopListDribbles <- function(shopListDribbles, selectedFileDates, cached_allMostShopListDribbles, refreshDribble=F) {
+  pickedDribbles <- # pick dribbles based on selected dates
+    {
+      pickDribbles <-
+        (shopListDribbles$name %in% selectedFileDates)
+
+      dribblePicked <- shopListDribbles[pickDribbles, ]
+
+      dribblePicked |>
+        dplyr::arrange(name)
+    }
+
+  allMostShopListDribbles <- # obtain dribble of all_most_....csv
+    update_allMostShopListDribbles(cached_allMostShopListDribbles, pickedDribbles, refreshDribble)
+
+  allMostShopListDribbles
+}
+
+update_allMostShopListDribbles <- function(cached_allMostShopListDribbles, pickedDribbles, refreshDribble=F) {
+  stringr::str_extract(cached_allMostShopListDribbles$name,"[0-9]+\\-[0-9]+\\-[0-9]+") -> allMost_availableDates
+
+  whichDoesNotHaveAllMostDribbles <- which(!(pickedDribbles$name %in% allMost_availableDates))
+  if(refreshDribble){ # if need to refresh, make all has no dribble
+    whichDoesNotHaveAllMostDribbles <- seq_along(pickedDribbles$name)
+  }
+  if(length(whichDoesNotHaveAllMostDribbles)!=0) # miss dribble
+  {
+    whichDoesNotHaveAllMostDribbles |>
+      purrr::map_dfr(
+        ~ {
+          pickedDribbles[.x, ] |>
+            googledrive::drive_ls(pattern = "^all_most", type = "text/csv")
+        }
+      ) -> extra_allMostShopListDribbles
+    return(dplyr::bind_rows(
+      cached_allMostShopListDribbles,
+      extra_allMostShopListDribbles
+    ))
+  }
+  return(cached_allMostShopListDribbles)
 }
