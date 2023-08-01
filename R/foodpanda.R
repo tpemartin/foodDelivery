@@ -183,7 +183,7 @@ retrieveData <- function(selectedFileDates, shopListDribbles, shopMenuDribbles, 
     dplyr::full_join(
       panel_shopList,
       by = c("shopCode", "date")
-    )
+    ) -> panel_shopMenus
 
   panel_shopMenus |>
     dplyr::select(
