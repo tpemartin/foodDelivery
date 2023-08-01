@@ -163,16 +163,16 @@ retrieveData <- function(selectedFileDates, shopListDribbles, shopMenuDribbles, 
             dplyr::arrange(name)
         }
 
-      panel_menu <- construct_panel_from_dribbles(selectedShopMenuDribbles, pj, download = need2download)
+      panel_menu <- construct_panel_from_dribbles(selectedShopMenuDribbles, pj, download = need2download, useFilenameToCreateDateColum=T)
 
       aug_panel_menu <- # augment date, lon, lat, county, township
         {
           # augment lat lon
           panel_menu <- augment_lat_lon(panel_menu)
 
-          # augment date
-          panel_menu$updateDate <- lubridate::ymd_hms(panel_menu$updateDate)
-          panel_menu$date <- lubridate::date(panel_menu$updateDate)
+          # # augment date
+          # panel_menu$updateDate <- lubridate::ymd_hms(panel_menu$updateDate)
+          # panel_menu$date <- lubridate::date(panel_menu$updateDate)
 
           panel_menu <- econDV2::augment_county_township_using_lon_lat(panel_menu) #augment_county_township(panel_menu)
         }
@@ -180,15 +180,14 @@ retrieveData <- function(selectedFileDates, shopListDribbles, shopMenuDribbles, 
     }
 
   panel_shopMenus |>
-    dplyr::full_join(
+    dplyr::left_join(
       panel_shopList,
       by = c("shopCode", "date")
     ) -> panel_shopMenus
 
   panel_shopMenus |>
+    dropRedudantColumns(dropDate = (length(selectedFileDates)==1)) |>
     dplyr::select(
-      -tidyselect::matches("^\\.\\.\\."),
-      -tidyselect::contains("date", ignore.case=T),
       -location
     ) |>
     dplyr::arrange(shopCode)
@@ -424,4 +423,17 @@ update_allMostShopListDribbles <- function(cached_allMostShopListDribbles, picke
     ))
   }
   return(cached_allMostShopListDribbles)
+}
+dropRedudantColumns <- function(panel_shopMenus, dropDate=T){
+  names(panel_shopMenus) -> .names
+  .names |>
+    stringr::str_subset("\\.[xy]$") -> dotxy
+  panel_shopMenus |>
+    dplyr::select(-dotxy) -> panel_shopMenus
+
+  if(dropDate){
+    panel_shopMenus |>
+      dplyr::select(-date) -> panel_shopMenus
+  }
+  panel_shopMenus
 }
