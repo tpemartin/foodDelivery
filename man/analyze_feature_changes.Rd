@@ -4,14 +4,12 @@
 \alias{analyze_feature_changes}
 \title{Compare two Foodpanda data frame for preliminary feature change analysis}
 \usage{
-analyze_feature_changes(df_before, df_after, fp, removeFeatures = "")
+analyze_feature_changes(df_before, df_after, removeFeatures = "")
 }
 \arguments{
 \item{df_before}{a data frame from foodpanda}
 
 \item{df_after}{a data frame fro foodpanda}
-
-\item{fp}{a Data Foodpanda class object}
 
 \item{removeFeatures}{a character of feature names that don't need to be analyzed (default = '')}
 }

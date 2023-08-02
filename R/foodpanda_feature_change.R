@@ -26,17 +26,12 @@ parse_menu_to_list_of_dataframe <- function(df) {
 #'
 #' @param df_before a data frame from foodpanda
 #' @param df_after a data frame fro foodpanda
-#' @param fp a Data Foodpanda class object
 #' @param removeFeatures a character of feature names that don't need to be analyzed (default = '')
 #'
 #' @return a list of analyzed result
 #' @export
-analyze_feature_changes <- function(df_before, df_after, fp, removeFeatures="") {
-  assertthat::assert_that(
-    "Data Foodpanda" %in% class(fp),
-    msg="fp input should be a Data Foodpanda class object"
-  )
-  fp$detect_feature_changes(df_before, df_after, removeFeatures = "") -> changes
+analyze_feature_changes <- function(df_before, df_after, removeFeatures="") {
+  compare_feature_changes(df_before, df_after, removeFeatures = "") -> changes
 
   feature_change <- initialize_feature_change_for_commonShops(
     df_before, df_after, changes
