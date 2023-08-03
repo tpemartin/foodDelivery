@@ -1,7 +1,7 @@
 Package: foodDelivery
 Type: Package
 Title: What the Package Does (Title Case)
-Version: 0.1.2
+Version: 0.1.3
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
@@ -18,4 +18,6 @@ Imports:
     R6,
     rprojroot,
     stringr
+Remotes: 
+    tpemartin/econDV2
 RoxygenNote: 7.2.2
