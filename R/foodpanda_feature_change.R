@@ -10,7 +10,8 @@ parse_menu_to_list_of_dataframe <- function(df) {
     purrr::map(
       purrr::safely(~{
         .x |>
-          stringr::str_replace_all("'",'"') |>
+          # stringr::str_replace_all("'",'"') |>
+          fix_jsonChar() |>
           jsonlite::fromJSON() |>
           list2DF()
       })
@@ -59,7 +60,20 @@ kable_clip <- function(...){
   knitr::kable(...) |>
     clipr::write_clip()
 }
-
+#' Fix menu json string error in old data
+#'
+#' @param mm a string of menu json
+#'
+#' @return a string of correct json
+#' @export
+fix_jsonChar <- function(mm){
+  mm |>
+    stringr::str_replace_all("\"","'") |>
+    stringr::str_replace_all("\\\\","\\\\\\\\") |>
+    stringr::str_replace_all(
+      "(?<=\\{|\\:[:blank:]\\[|\\,[:blank:]|\\]\\,[blank]|\\]\\,[:blank:])'|'(?=\\:[:blank:]\\[|\\,[:blank:]|\\]\\,[:blank:]|\\]\\})",
+      "\"")
+}
 # helpers ----
 
 summarise_change_in_discountType <- function(feature_change) {
