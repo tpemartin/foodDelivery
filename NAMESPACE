@@ -2,5 +2,6 @@
 
 export(FoodPanda)
 export(analyze_feature_changes)
+export(fix_jsonChar)
 export(kable_clip)
 export(parse_menu_to_list_of_dataframe)
