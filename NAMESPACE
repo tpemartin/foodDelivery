@@ -3,6 +3,7 @@
 export(FoodPanda)
 export(analyze_feature_changes)
 export(fix_jsonChar)
+export(get_popular_items_from_menuJson)
 export(get_weather_data)
 export(kable_clip)
 export(parse_menu_to_list_of_dataframe)
