@@ -1,7 +1,7 @@
 Package: foodDelivery
 Type: Package
 Title: What the Package Does (Title Case)
-Version: 0.1.5
+Version: 0.1.6
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
@@ -12,11 +12,13 @@ LazyData: true
 Imports: 
     dplyr,
     econDV2,
+    glue,
     googledrive,
     jsonlite,
     purrr,
     R6,
     rprojroot,
+    rvest,
     stringr
 Remotes: 
     tpemartin/econDV2
