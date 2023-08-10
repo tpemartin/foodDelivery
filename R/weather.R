@@ -1,4 +1,4 @@
-#' Get weather data
+#' Get weather data from all Taiwan weather observation stations
 #'
 #' @param date a string of "YYYY-MM-DD" format for day weather, "YYYY-MM" for month weather, "YYYY" for year weather.
 #'

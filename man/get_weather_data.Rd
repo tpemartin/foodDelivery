@@ -2,7 +2,7 @@
 % Please edit documentation in R/weather.R
 \name{get_weather_data}
 \alias{get_weather_data}
-\title{Get weather data}
+\title{Get weather data from all Taiwan weather observation stations}
 \usage{
 get_weather_data(date)
 }
@@ -13,5 +13,5 @@ get_weather_data(date)
 a list of weather data from all observation stations. Check weather_stations data frame for more details.
 }
 \description{
-Get weather data
+Get weather data from all Taiwan weather observation stations
 }
